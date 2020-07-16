@@ -36,9 +36,11 @@ INSTALLED_APPS = [
     # 'django.contrib.contenttypes',
     # 'django.contrib.sessions',
     # 'django.contrib.messages',
-    # 'django.contrib.staticfiles',
+    'django.contrib.staticfiles',
     'rest_framework',
-    'goods_service'
+    'goods_service',
+    'drf_yasg',
+
 ]
 
 MIDDLEWARE = [
@@ -119,4 +121,7 @@ REST_FRAMEWORK = {
         'rest_framework.parsers.JSONParser',
     ],
     'UNAUTHENTICATED_USER': None,
+}
+SWAGGER_SETTINGS = {
+    'USE_SESSION_AUTH' : False,
 }
