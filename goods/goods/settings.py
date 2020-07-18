@@ -111,8 +111,6 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 
-
-
 REST_FRAMEWORK = {
     'DEFAULT_RENDERER_CLASSES': [
         'rest_framework.renderers.JSONRenderer',
@@ -123,5 +121,5 @@ REST_FRAMEWORK = {
     'UNAUTHENTICATED_USER': None,
 }
 SWAGGER_SETTINGS = {
-    'USE_SESSION_AUTH' : False,
+    'USE_SESSION_AUTH': False,
 }
