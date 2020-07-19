@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from goods_service.models import Advert, AdvertTag, AdvertImage
+
+from goods_service.models import Advert, AdvertImage, AdvertTag
 
 
 class AdvertTagSerializer(serializers.ModelSerializer):

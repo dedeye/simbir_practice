@@ -1,7 +1,9 @@
-from django.db import models
-from sortedm2m.fields import SortedManyToManyField
-from django.dispatch import receiver
 import os
+
+from django.db import models
+from django.dispatch import receiver
+
+from sortedm2m.fields import SortedManyToManyField
 
 
 class AdvertTag(models.Model):
