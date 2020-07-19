@@ -1,5 +1,7 @@
 from django.db import models
 from sortedm2m.fields import SortedManyToManyField
+from django.dispatch import receiver
+import os
 
 
 class AdvertTag(models.Model):
@@ -38,3 +40,11 @@ class AdvertImage(models.Model):
 
     class Meta:
         ordering = ["id"]
+
+
+# delete file on disk after deleting in db
+@receiver(models.signals.post_delete, sender=AdvertImage)
+def auto_delete_file_on_delete(sender, instance, **kwargs):
+    if instance.file:
+        if os.path.isfile(instance.file.path):
+            os.remove(instance.file.path)

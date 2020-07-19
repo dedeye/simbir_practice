@@ -2,7 +2,6 @@ from rest_framework import serializers
 from goods_service.models import Advert, AdvertTag, AdvertImage
 
 
-
 class AdvertTagSerializer(serializers.ModelSerializer):
     def to_internal_value(self, data):
         # Perform the data validation.
@@ -52,17 +51,20 @@ class AdvertSerializer(serializers.ModelSerializer):
         return adv
 
     def update(self, instance, validated_data):
-        tag_list = validated_data.pop("tags")
+        tag_list = validated_data.get("tags", None)
+
         instance.title = validated_data.get("title", instance.title)
         instance.description = validated_data.get("description", instance.description)
         instance.contacts = validated_data.get("contacts", instance.contacts)
         instance.price = validated_data.get("price", instance.price)
-        instance.tags.clear()
+
         instance.save()
-        for tag_data in tag_list:
-            tag, _ = AdvertTag.objects.get_or_create(**tag_data)
-            print("getting tag %s", tag.name)
-            instance.tags.add(tag)
+
+        if tag_list is not None:
+            instance.tags.clear()
+            for tag_data in tag_list:
+                tag, _ = AdvertTag.objects.get_or_create(**tag_data)
+                instance.tags.add(tag)
 
         return instance
 
