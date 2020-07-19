@@ -2,7 +2,7 @@ from rest_framework import serializers
 from goods_service.models import Advert, AdvertTag
 
 
-class AdvertTagSerializer(serializers.StringRelatedField):
+class AdvertTagSerializer(serializers.ModelSerializer):
     def to_internal_value(self, data):
 
         # Perform the data validation.
@@ -23,6 +23,13 @@ class AdvertTagSerializer(serializers.StringRelatedField):
 
     def create(self, validated_data):
         return AdvertTag.objects.create(**validated_data)
+
+    def to_representation(self, value):
+        return str(value)
+
+    class Meta:
+        model = Advert
+        fields = '__all__'
 
 
 class AdvertSerializer(serializers.ModelSerializer):
@@ -46,7 +53,8 @@ class AdvertSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         tag_list = validated_data.pop('tags')
         instance.title = validated_data.get('title', instance.title)
-        instance.description = validated_data.get('description', instance.description)
+        instance.description = validated_data.get(
+            'description', instance.description)
         instance.contacts = validated_data.get('contacts', instance.contacts)
         instance.price = validated_data.get('price', instance.price)
         instance.tags.clear()
@@ -60,7 +68,10 @@ class AdvertSerializer(serializers.ModelSerializer):
 
 
 class AdvertBriefSerializer(serializers.ModelSerializer):
+    detailed = serializers.HyperlinkedIdentityField(
+        view_name='goods:advert-detail')
+    tags = AdvertTagSerializer(many=True)
 
     class Meta:
         model = Advert
-        fields = ('id', 'title', 'price', 'views')
+        fields = ('id', 'title', 'price', 'views', 'detailed', 'tags')
