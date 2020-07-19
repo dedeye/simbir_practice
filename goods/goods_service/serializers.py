@@ -28,7 +28,7 @@ class AdvertTagSerializer(serializers.ModelSerializer):
         return str(value)
 
     class Meta:
-        model = Advert
+        model = AdvertTag
         fields = '__all__'
 
 

@@ -11,6 +11,7 @@ from goods_service.models import Advert as AdvertModel,\
     AdvertTag as AdvertTagModel
 
 from rest_framework import pagination
+from rest_framework.exceptions import ValidationError
 
 
 class Advert(ModelViewSet):
@@ -52,9 +53,15 @@ class Advert(ModelViewSet):
         if tags is not None:
             queryset = self.queryset.filter(tags__name__in=tags)
 
+        page = self.paginate_queryset(queryset)
+
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
         return Response(self.get_serializer(queryset, many=True).data)
 
-    @action(detail=False, methods=['get'])
+    @action(detail=False)
     def all_tags(self, request, *args, **kwargs):
         class TagPagination(pagination.PageNumberPagination):
             page_size = 30
@@ -68,4 +75,41 @@ class Advert(ModelViewSet):
             serializer = AdvertTagSerializer(page, many=True)
             return tag_paginator.get_paginated_response(serializer.data)
 
-        serializer = AdvertTagSerializer(page, many=True)
+        return Response(AdvertTagSerializer(tags, many=True).data)
+
+    max_param = openapi.Parameter('max',
+                                  in_=openapi.IN_QUERY,
+                                  type=openapi.TYPE_INTEGER)
+
+    min_param = openapi.Parameter('min',
+                                  in_=openapi.IN_QUERY,
+                                  type=openapi.TYPE_INTEGER)
+
+    sort_types = {'ascend': 'price', 'descend': '-price'}
+    sort_param = openapi.Parameter('sort',
+                                   in_=openapi.IN_QUERY,
+                                   type=openapi.TYPE_STRING,
+                                   enum=list(sort_types.keys()))
+
+    @swagger_auto_schema(manual_parameters=[max_param, min_param, sort_param])
+    @action(detail=False)
+    def by_price(self, request, *args, **kwargs):
+        max = self.request.query_params.get('max', 2147483647)
+        min = self.request.query_params.get('min', 0)
+        sort = self.request.query_params.get('sort', 'ascend')
+
+        if sort not in self.sort_types.keys():
+            raise ValidationError("sort not supported")
+
+        queryset = self.queryset.filter(
+            price__gte=min, price__lte=max).order_by(self.sort_types[sort])
+
+        page = self.paginate_queryset(queryset)
+
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        return Response(self.get_serializer(queryset, many=True).data)
+
+    
