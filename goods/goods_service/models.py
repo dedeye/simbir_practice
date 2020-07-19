@@ -1,6 +1,6 @@
 from django.db import models
 from sortedm2m.fields import SortedManyToManyField
-from django.conf import settings
+
 
 class AdvertTag(models.Model):
     name = models.CharField(max_length=30, blank=False, unique=True)

@@ -2,19 +2,14 @@ from rest_framework import serializers
 from goods_service.models import Advert, AdvertTag, AdvertImage
 
 
+
 class AdvertTagSerializer(serializers.ModelSerializer):
     def to_internal_value(self, data):
-
         # Perform the data validation.
         if not data:
             raise serializers.ValidationError({"name": "This field is required."})
         if len(data) > 30:
-            raise serializers.ValidationError(
-                {"name": "May not be more than 30 characters."}
-            )
-
-        # Return the validated values. This will be available as
-        # the `.validated_data` property.
+            raise serializers.ValidationError({"name": "May be < 30 chars."})
         return {"name": data}
 
     def create(self, validated_data):
@@ -27,21 +22,19 @@ class AdvertTagSerializer(serializers.ModelSerializer):
         model = AdvertTag
         fields = "__all__"
 
+
 class AdvertImageSerializer(serializers.ModelSerializer):
     file = serializers.FileField()
+
     class Meta:
         model = AdvertImage
-        fields = ['file','id']
+        fields = ["file", "id"]
         read_only_fields = ["id"]
-
 
 
 class AdvertSerializer(serializers.ModelSerializer):
     tags = AdvertTagSerializer(many=True)
-    image = AdvertImageSerializer(
-        many=True, read_only=True,
-        
-    )
+    image = AdvertImageSerializer(many=True, read_only=True,)
 
     class Meta:
         model = Advert
@@ -81,6 +74,3 @@ class AdvertBriefSerializer(serializers.ModelSerializer):
     class Meta:
         model = Advert
         fields = ("id", "title", "price", "views", "detailed", "tags")
-
-
-

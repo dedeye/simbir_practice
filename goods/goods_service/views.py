@@ -1,34 +1,31 @@
+from django.shortcuts import get_object_or_404
+from rest_framework import mixins, generics
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from rest_framework.viewsets import ModelViewSet, GenericViewSet
+from rest_framework import pagination
+from rest_framework.exceptions import ValidationError
+from rest_framework.parsers import MultiPartParser
+from rest_framework import status
+import dateutil.parser
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import mixins, views, generics
-from rest_framework.decorators import action
-from rest_framework.reverse import reverse
+from goods_service.models import (
+    Advert as AdvertModel,
+    AdvertTag as AdvertTagModel,
+    AdvertImage as AdvertImageModel,
+)
 from goods_service.serializers import (
     AdvertSerializer,
     AdvertBriefSerializer,
     AdvertTagSerializer,
     AdvertImageSerializer,
 )
-from rest_framework.response import Response
-from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet, GenericViewSet
-from django.shortcuts import get_object_or_404
-from goods_service.models import (
-    Advert as AdvertModel,
-    AdvertTag as AdvertTagModel,
-    AdvertImage as AdvertImageModel,
-)
-
-from rest_framework import pagination
-from rest_framework.exceptions import ValidationError
-import dateutil.parser
-from rest_framework.parsers import JSONParser, MultiPartParser, FileUploadParser
-
-from rest_framework import status
 
 
 class AdvertView(ModelViewSet):
     queryset = AdvertModel.objects.all()
-
+    
     # use detailed presentation in detail view
     detailed_actions = {"create", "destroy", "retrieve", "update", "partial_update"}
 
@@ -159,8 +156,6 @@ class AdvertView(ModelViewSet):
         after = self.request.query_params.get("after", "0001-01-01T00:00:00")
         sort = self.request.query_params.get("sort", "newest")
 
-        # print('reverse ', reverse('goods:advert-img', args=[1,2]))
-        # print('reverse ', self.img.url_name)
         if sort not in self.sort_date_types.keys():
             raise ValidationError("sort not supported")
 
@@ -182,68 +177,19 @@ class AdvertView(ModelViewSet):
 
         return Response(self.get_serializer(queryset, many=True).data)
 
-    # @action(
-    #     detail=True,
-    #     methods=["get", "put", "delete"],
-    #     url_path="image/(?P<img_id>[^/.]+)",
-    # )
-    # def img(self, request, *args, **kwargs):
-    #     advert = self.get_object()
-    #     queryset = AdvertImageModel.objects.filter(advert__id=advert.id)
-    #     return Response(self.get_serializer(queryset, many=True).data)
-
-    # @action(detail=True, methods=["post"])
-    # def img_upload(self, request, *args, **kwargs):
-    #     # parser_classes = [MultiPartParser]
-    #     serializer_class = AdvertImageSerializer
-
-    #     queryset = AdvertImageModel.objects.all()
-    #     print(request.data)
-
-    #     # serializer_class = AdvertImageSerializer
-
-    #     # def post(self, request, advert, format=None):
-    #     if "file" not in request.data:
-    #         raise ValidationError("Empty content")
-
-    #     f = request.data["file"]
-    #     adv = self.get_object()
-    #     AdvertImageModel.objects.create(advert=adv, file=f)
-
-    #     return Response(status=status.HTTP_201_CREATED)
-
-
-# class AdvertImageView(mixins.RetrieveModelMixin, generics.CreateAPIView):
-#     parser_classes = [MultiPartParser]
-#     queryset = AdvertImageModel.objects.all()
-
-#     # serializer_class = AdvertImageSerializer
-
-#     def post(self, request, advert, format=None):
-#         if "file" not in request.data:
-#             raise ValidationError("Empty content")
-
-#         f = request.data["file"]
-#         adv = AdvertModel.objects.get(id=advert)
-#         AdvertImageModel.objects.create(advert=adv, file=f)
-
-#         return Response(status=status.HTTP_201_CREATED)
-
 
 class AdvertImageView(
-    mixins.RetrieveModelMixin,
-    mixins.DestroyModelMixin,
-    GenericViewSet,
+    mixins.RetrieveModelMixin, mixins.DestroyModelMixin, GenericViewSet,
 ):
     parser_classes = [MultiPartParser]
     queryset = AdvertImageModel.objects.all()
     serializer_class = AdvertImageSerializer
 
 
-
 class AdvertImageUpload(generics.CreateAPIView):
     parser_classes = [MultiPartParser]
     serializer_class = AdvertImageSerializer
+
     def post(self, request, id, format=None):
         if "file" not in request.data:
             raise ValidationError("Empty content")
