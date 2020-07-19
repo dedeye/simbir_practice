@@ -12,6 +12,7 @@ from goods_service.models import Advert as AdvertModel,\
 
 from rest_framework import pagination
 from rest_framework.exceptions import ValidationError
+import dateutil.parser
 
 
 class Advert(ModelViewSet):
@@ -85,24 +86,24 @@ class Advert(ModelViewSet):
                                   in_=openapi.IN_QUERY,
                                   type=openapi.TYPE_INTEGER)
 
-    sort_types = {'ascend': 'price', 'descend': '-price'}
-    sort_param = openapi.Parameter('sort',
-                                   in_=openapi.IN_QUERY,
-                                   type=openapi.TYPE_STRING,
-                                   enum=list(sort_types.keys()))
+    sort_price_types = {'lowest': 'price', 'highest': '-price'}
+    sort_price_param = openapi.Parameter('sort',
+                                         in_=openapi.IN_QUERY,
+                                         type=openapi.TYPE_STRING,
+                                         enum=list(sort_price_types.keys()))
 
-    @swagger_auto_schema(manual_parameters=[max_param, min_param, sort_param])
+    @swagger_auto_schema(manual_parameters=[max_param, min_param, sort_price_param])
     @action(detail=False)
     def by_price(self, request, *args, **kwargs):
         max = self.request.query_params.get('max', 2147483647)
         min = self.request.query_params.get('min', 0)
-        sort = self.request.query_params.get('sort', 'ascend')
+        sort = self.request.query_params.get('sort', 'lowest')
 
-        if sort not in self.sort_types.keys():
+        if sort not in self.sort_price_types.keys():
             raise ValidationError("sort not supported")
 
         queryset = self.queryset.filter(
-            price__gte=min, price__lte=max).order_by(self.sort_types[sort])
+            price__gte=min, price__lte=max).order_by(self.sort_price_types[sort])
 
         page = self.paginate_queryset(queryset)
 
@@ -112,4 +113,44 @@ class Advert(ModelViewSet):
 
         return Response(self.get_serializer(queryset, many=True).data)
 
-    
+    after_param = openapi.Parameter('after',
+                                    in_=openapi.IN_QUERY,
+                                    type=openapi.TYPE_STRING,
+                                    format=openapi.FORMAT_DATETIME,
+                                    default='2020-07-19T00:00:00Z')
+
+    before_param = openapi.Parameter('before',
+                                     in_=openapi.IN_QUERY,
+                                     type=openapi.TYPE_STRING,
+                                     format=openapi.FORMAT_DATETIME,
+                                     default='2020-07-19T00:00:00Z')
+
+    sort_date_types = {'newest': '-created', 'oldest': 'created'}
+    sort_date_param = openapi.Parameter('sort',
+                                        in_=openapi.IN_QUERY,
+                                        type=openapi.TYPE_STRING,
+                                        enum=list(sort_date_types.keys()))
+
+    @ swagger_auto_schema(manual_parameters=[after_param, before_param, sort_date_param])
+    @ action(detail=False)
+    def by_date(self, request, *args, **kwargs):
+        before = self.request.query_params.get('before', '3000-01-01T00:00:00')
+        after = self.request.query_params.get('after', '0001-01-01T00:00:00')
+        sort = self.request.query_params.get('sort', 'newest')
+
+        try:
+            before = dateutil.parser.parse(before)
+            after = dateutil.parser.parse(after)
+        except(Exception):
+            raise ValidationError("can not parse date")
+
+        queryset = self.queryset.filter(
+            created__range=[str(after), str(before)]).order_by(self.sort_date_types[sort])
+
+        page = self.paginate_queryset(queryset)
+
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        return Response(self.get_serializer(queryset, many=True).data)
