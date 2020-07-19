@@ -1,6 +1,6 @@
 from django.db import models
 from sortedm2m.fields import SortedManyToManyField
-
+from django.conf import settings
 
 class AdvertTag(models.Model):
     name = models.CharField(max_length=30, blank=False, unique=True)
@@ -9,7 +9,7 @@ class AdvertTag(models.Model):
         return self.name
 
     class Meta:
-        ordering = ['name']
+        ordering = ["name"]
 
 
 class Advert(models.Model):
@@ -19,7 +19,7 @@ class Advert(models.Model):
     contacts = models.TextField(max_length=200, blank=False)
     price = models.PositiveIntegerField(blank=True, null=True)
     views = models.PositiveIntegerField(default=0)
-    tags = SortedManyToManyField(AdvertTag,)
+    tags = SortedManyToManyField(AdvertTag)
 
     def __str__(self):
         return self.title
@@ -29,4 +29,12 @@ class Advert(models.Model):
         self.save()
 
     class Meta:
-        ordering = ['id']
+        ordering = ["id"]
+
+
+class AdvertImage(models.Model):
+    file = models.FileField(upload_to="img")
+    advert = models.ForeignKey(Advert, related_name="image", on_delete=models.CASCADE)
+
+    class Meta:
+        ordering = ["id"]

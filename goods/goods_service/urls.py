@@ -1,6 +1,8 @@
 from django.urls import path, include
 from goods_service import views
 from rest_framework.routers import DefaultRouter
+from django.urls import path
+
 
 app_name = "goods"
 
@@ -33,10 +35,19 @@ app_name = "goods"
 # ]
 # Create a router and register our viewsets with it.
 router = DefaultRouter()
-router.register(r'advert', views.Advert, )
+router.register(
+    r"advert", views.AdvertView,
+)
+router.register(
+    r"img", views.AdvertImageView,
+)
+
 # router.register(r'advert_brief', views.AdvertBrief)
 
 # The API URLs are now determined automatically by the router.
 urlpatterns = [
-    path('', include(router.urls)),
+    path("", include(router.urls)),
+    path('advert/<int:id>/img', views.AdvertImageUpload.as_view()),
 ]
+
+
