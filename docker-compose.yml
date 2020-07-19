@@ -1,25 +1,27 @@
-  version: '3'
+version: '3'
     
-  services:
-    db:
-      image: postgres:12
-      volumes:
-        - postgres_data:/var/lib/postgresql/data/
-      environment: 
-        - POSTGRES_USER=goods_user
-        - POSTGRES_PASSWORD=goods_password
-        - POSTGRES_DB=goods_db
-    web:
-      build: goods
-      command: python goods/manage.py runserver 0.0.0.0:8000
-      volumes:
-        - .:/code
-      ports:
-        - "8000:8000"
-      depends_on:
-        - db
-      env_file:
-        - ./.env.dev
+services:
+  db:
+    image: postgres:12
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment: 
+      - POSTGRES_USER=goods_user
+      - POSTGRES_PASSWORD=goods_password
+      - POSTGRES_DB=goods_db
+  web:
+    build: goods
+    command: sh -c "/usr/local/bin/python goods/manage.py makemigrations && 
+                    python goods/manage.py migrate && 
+                    python goods/manage.py runserver 0.0.0.0:8000"
+    volumes:
+      - .:/code
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    env_file:
+      - ./.env.dev
 
-  volumes:
-    postgres_data:
+volumes:
+  postgres_data:
