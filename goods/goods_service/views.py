@@ -25,7 +25,7 @@ from goods_service.serializers import (
 
 class AdvertView(ModelViewSet):
     queryset = AdvertModel.objects.all()
-    
+
     # use detailed presentation in detail view
     detailed_actions = {"create", "destroy", "retrieve", "update", "partial_update"}
 
@@ -41,35 +41,12 @@ class AdvertView(ModelViewSet):
 
         return Response(self.get_serializer(adv).data)
 
-    by_tag_param = openapi.Parameter(
-        "tag",
-        in_=openapi.IN_QUERY,
-        type=openapi.TYPE_ARRAY,
-        items={"type": "string"},
-        collectionFormat="multi",
-    )
-
     @action(detail=True)
     def brief(self, request, *args, **kwargs):
         instance = self.get_object()
         serializer = self.get_serializer(instance)
 
         return Response(serializer.data)
-
-    @swagger_auto_schema(manual_parameters=[by_tag_param])
-    @action(detail=False)
-    def by_tag(self, request, *args, **kwargs):
-        tags = self.request.query_params.getlist("tag", None)
-        if tags is not None:
-            queryset = self.queryset.filter(tags__name__in=tags)
-
-        page = self.paginate_queryset(queryset)
-
-        if page is not None:
-            serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
-
-        return Response(self.get_serializer(queryset, many=True).data)
 
     @action(detail=False)
     def all_tags(self, request, *args, **kwargs):
@@ -87,88 +64,92 @@ class AdvertView(ModelViewSet):
 
         return Response(AdvertTagSerializer(tags, many=True).data)
 
-    max_param = openapi.Parameter(
-        "max", in_=openapi.IN_QUERY, type=openapi.TYPE_INTEGER
+    # swagger schema for filter
+    @swagger_auto_schema(
+        manual_parameters=[
+            openapi.Parameter(
+                "before",
+                in_=openapi.IN_QUERY,
+                type=openapi.TYPE_STRING,
+                format=openapi.FORMAT_DATETIME,
+                default="2021-01-01T00:00:00",
+            ),
+            openapi.Parameter(
+                "after",
+                in_=openapi.IN_QUERY,
+                type=openapi.TYPE_STRING,
+                format=openapi.FORMAT_DATETIME,
+                default="2020-01-01T00:00:00",
+            ),
+            openapi.Parameter(
+                "max_price", in_=openapi.IN_QUERY, type=openapi.TYPE_INTEGER
+            ),
+            openapi.Parameter(
+                "min_price", in_=openapi.IN_QUERY, type=openapi.TYPE_INTEGER
+            ),
+            openapi.Parameter(
+                "tag",
+                in_=openapi.IN_QUERY,
+                type=openapi.TYPE_ARRAY,
+                items={"type": "string"},
+                collectionFormat="multi",
+            ),
+            openapi.Parameter(
+                "order",
+                in_=openapi.IN_QUERY,
+                type=openapi.TYPE_STRING,
+                enum=["cheap", "expensive", "old", "new"],
+            ),
+        ]
     )
-
-    min_param = openapi.Parameter(
-        "min", in_=openapi.IN_QUERY, type=openapi.TYPE_INTEGER
-    )
-
-    sort_price_types = {"lowest": "price", "highest": "-price"}
-    sort_price_param = openapi.Parameter(
-        "sort",
-        in_=openapi.IN_QUERY,
-        type=openapi.TYPE_STRING,
-        enum=list(sort_price_types.keys()),
-    )
-
-    @swagger_auto_schema(manual_parameters=[max_param, min_param, sort_price_param])
     @action(detail=False)
-    def by_price(self, request, *args, **kwargs):
-        max = self.request.query_params.get("max", 2147483647)
-        min = self.request.query_params.get("min", 0)
-        sort = self.request.query_params.get("sort", "lowest")
+    def filter(self, request, *args, **kwargs):
 
-        if sort not in self.sort_price_types.keys():
-            raise ValidationError("sort not supported")
-
-        queryset = self.queryset.filter(price__gte=min, price__lte=max).order_by(
-            self.sort_price_types[sort]
-        )
-
-        page = self.paginate_queryset(queryset)
-
-        if page is not None:
-            serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
-
-        return Response(self.get_serializer(queryset, many=True).data)
-
-    after_param = openapi.Parameter(
-        "after",
-        in_=openapi.IN_QUERY,
-        type=openapi.TYPE_STRING,
-        format=openapi.FORMAT_DATETIME,
-        default="2020-07-19T00:00:00Z",
-    )
-
-    before_param = openapi.Parameter(
-        "before",
-        in_=openapi.IN_QUERY,
-        type=openapi.TYPE_STRING,
-        format=openapi.FORMAT_DATETIME,
-        default="2020-07-19T00:00:00Z",
-    )
-
-    sort_date_types = {"newest": "-created", "oldest": "created"}
-    sort_date_param = openapi.Parameter(
-        "sort",
-        in_=openapi.IN_QUERY,
-        type=openapi.TYPE_STRING,
-        enum=list(sort_date_types.keys()),
-    )
-
-    @swagger_auto_schema(manual_parameters=[after_param, before_param, sort_date_param])
-    @action(detail=False)
-    def by_date(self, request, *args, **kwargs):
+        queryset = AdvertModel.objects.all()
+        order_types = {
+            "cheap": "price",
+            "expensive": "-price",
+            "old": "created",
+            "new": "-created",
+        }
+        # parse all possible filter params
         before = self.request.query_params.get("before", "3000-01-01T00:00:00")
         after = self.request.query_params.get("after", "0001-01-01T00:00:00")
-        sort = self.request.query_params.get("sort", "newest")
+        max_price = self.request.query_params.get("max_price", None)
+        min_price = self.request.query_params.get("min_price", None)
+        tags = self.request.query_params.getlist("tag", [])
+        order = self.request.query_params.get("order", None)
 
-        if sort not in self.sort_date_types.keys():
-            raise ValidationError("sort not supported")
+        # validate order
+        if order is not None and order not in order_types.keys():
+            raise ValidationError("order type not supported")
 
+        # validate datetime
         try:
             before = dateutil.parser.parse(before)
             after = dateutil.parser.parse(after)
         except (Exception):
             raise ValidationError("can not parse date")
 
-        queryset = self.queryset.filter(
-            created__range=[str(after), str(before)]
-        ).order_by(self.sort_date_types[sort])
+        # filter by tags
+        if tags:
+            print(tags)
+            queryset = queryset.filter(tags__name__in=tags)
 
+        # filter by price
+        if max_price is not None:
+            queryset = queryset.filter(price__lte=max_price)
+        if min_price is not None:
+            queryset = queryset.filter(price__gte=min_price)
+
+        # filter by datetime
+        queryset = queryset.filter(created__range=[str(after), str(before)])
+
+        # order
+        if order is not None:
+            queryset = queryset.order_by(order_types[order])
+
+        # paginate
         page = self.paginate_queryset(queryset)
 
         if page is not None:
