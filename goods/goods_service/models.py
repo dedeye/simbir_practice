@@ -1,7 +1,4 @@
-import os
-
 from django.db import models
-from django.dispatch import receiver
 
 from sortedm2m.fields import SortedManyToManyField
 
@@ -38,7 +35,13 @@ class Advert(models.Model):
 
 class AdvertImage(models.Model):
     file = models.FileField(upload_to="img")
-    advert = models.ForeignKey(Advert, related_name="image", on_delete=models.CASCADE)
+    advert = models.ForeignKey(
+        Advert, related_name="image", on_delete=models.SET_NULL, null=True
+    )
+
+    def delete(self, *args, **kwargs):
+        self.advert = None
+        self.save()
 
     class Meta:
         ordering = ["id"]

@@ -142,3 +142,5 @@ cython_debug/
 
 #media
 goods/media/
+
+.DS_Store
