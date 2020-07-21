@@ -18,9 +18,9 @@ class AdvertTag(models.Model):
 
 class Advert(models.Model):
     created = models.DateTimeField(auto_now_add=True)
-    title = models.CharField(max_length=30, blank=False)
-    description = models.TextField(max_length=300, blank=True)
-    contacts = models.TextField(max_length=200, blank=False)
+    title = models.CharField(max_length=200, blank=False)
+    description = models.TextField(max_length=500, blank=True)
+    contacts = models.TextField(max_length=300, blank=False)
     price = models.PositiveIntegerField(blank=True, null=True)
     views = models.PositiveIntegerField(default=0)
     tags = SortedManyToManyField(AdvertTag)
@@ -42,11 +42,3 @@ class AdvertImage(models.Model):
 
     class Meta:
         ordering = ["id"]
-
-
-# delete file on disk after deleting in db
-@receiver(models.signals.post_delete, sender=AdvertImage)
-def auto_delete_file_on_delete(sender, instance, **kwargs):
-    if instance.file:
-        if os.path.isfile(instance.file.path):
-            os.remove(instance.file.path)

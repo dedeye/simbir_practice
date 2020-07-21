@@ -11,9 +11,7 @@ services:
       - POSTGRES_DB=goods_db
   web:
     build: goods
-    command: sh -c "/usr/local/bin/python goods/manage.py makemigrations && 
-                    python goods/manage.py migrate && 
-                    python goods/manage.py runserver 0.0.0.0:8000"
+    command: python goods/manage.py runserver 0.0.0.0:8000
     volumes:
       - .:/code
     ports:
