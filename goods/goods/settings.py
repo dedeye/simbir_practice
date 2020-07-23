@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "goods_service",
     "drf_yasg",
+    "safedelete",
 ]
 
 MIDDLEWARE = []

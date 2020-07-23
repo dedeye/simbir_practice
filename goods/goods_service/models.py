@@ -1,5 +1,6 @@
 from django.db import models
-
+from django.dispatch import receiver
+from safedelete.models import SafeDeleteModel
 from sortedm2m.fields import SortedManyToManyField
 
 
@@ -33,15 +34,18 @@ class Advert(models.Model):
         ordering = ["id"]
 
 
-class AdvertImage(models.Model):
+class AdvertImage(SafeDeleteModel):
     file = models.FileField(upload_to="img")
     advert = models.ForeignKey(
         Advert, related_name="image", on_delete=models.SET_NULL, null=True
     )
 
-    def delete(self, *args, **kwargs):
-        self.advert = None
-        self.save()
-
     class Meta:
         ordering = ["id"]
+
+
+# soft deleting images of advert
+@receiver(models.signals.pre_delete, sender=Advert)
+def auto_delete_file_on_delete(sender, instance, **kwargs):
+    for image in instance.image.iterator():
+        image.delete()
