@@ -1,0 +1,24 @@
+import os
+
+DATABASE = {
+    "NAME": os.environ.get("SQL_DATABASE"),
+    "USER": os.environ.get("SQL_USER"),
+    "PASSWORD": os.environ.get("SQL_PASSWORD"),
+    "HOST": os.environ.get("SQL_HOST"),
+    "PORT": os.environ.get("SQL_PORT"),
+}
+DATABASE_URL = "postgres://{}:{}@{}:{}/{}".format(
+    DATABASE["USER"],
+    DATABASE["PASSWORD"],
+    DATABASE["HOST"],
+    DATABASE["PORT"],
+    DATABASE["NAME"],
+)
+
+
+JWT = {
+    "JWT_SECRET": os.environ.get("JWT_SECRET"),
+    "JWT_ALGORITHM": os.environ.get("JWT_ALGORITM", "HS256"),
+    "JWT_TTL": os.environ.get("JWT_TTL", 20 * 60),
+    "REFRESH_TOKEN_TTL": os.environ.get("REFRESH_TOKEN_TTL", 20 * 60 * 60),
+}
