@@ -2,8 +2,6 @@ from argon2 import PasswordHasher, exceptions
 
 from user_auth.app.db import create_user, get_user
 
-ph = PasswordHasher()
-
 
 class UserExistsException(Exception):
     pass
@@ -15,6 +13,9 @@ class UserNotFoundException(Exception):
 
 class WrongPasswordException(Exception):
     pass
+
+
+ph = PasswordHasher()
 
 
 async def login(db, username, password):

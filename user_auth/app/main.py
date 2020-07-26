@@ -17,9 +17,11 @@ async def user_app():
     setup_routes(app)
     setup_swagger(app)
 
+    # db init/clode
     app.on_startup.append(init_pg)
     app.on_cleanup.append(close_pg)
 
+    # jwt init/close (redis mostly)
     app.on_startup.append(jwt_pair.init_storage)
     app.on_cleanup.append(jwt_pair.close_storage)
 

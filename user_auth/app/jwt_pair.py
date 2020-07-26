@@ -6,10 +6,12 @@ import aioredis
 import jwt
 from aiohttp_jwt import JWTMiddleware
 
-JWT_SECRET = "secret"
-JWT_ALGORITHM = "HS256"
-JWT_TTL = 20 * 60
-RFR_TTL = 20 * 60 * 60
+import user_auth.app.settings as settings
+
+JWT_SECRET = settings.JWT["SECRET"]
+JWT_ALGORITHM = settings.JWT["ALGORITHM"]
+JWT_TTL = settings.JWT["TTL"]
+RFR_TTL = settings.JWT["REFRESH_TOKEN_TTL"]
 
 
 class JwtPairNotFound(Exception):
@@ -27,7 +29,6 @@ async def close_storage(app):
 
 
 async def create(request, user, role):
-
     jwt_exp = ceil((datetime.utcnow() + timedelta(seconds=JWT_TTL)).timestamp())
     refresh_exp = ceil((datetime.utcnow() + timedelta(seconds=RFR_TTL)).timestamp())
 
@@ -85,7 +86,7 @@ def middleware(whitelist):
         JWT_SECRET,
         request_property="jwt-token",
         credentials_required=False,
-        algorithms="HS256",
+        algorithms=JWT_ALGORITHM,
         whitelist=whitelist,
         store_token="jwt-encoded",
         is_revoked=is_revoked,
