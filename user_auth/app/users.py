@@ -1,6 +1,6 @@
 from argon2 import PasswordHasher, exceptions
 
-from user_auth.app.db import create_user, get_user
+from user_auth.app.models import User
 
 
 class UserExistsException(Exception):
@@ -20,7 +20,7 @@ ph = PasswordHasher()
 
 async def login(db, username, password):
     async with db.acquire() as conn:
-        user_data = await get_user(conn, username=username)
+        user_data = await User.get_user(conn, username=username)
         if not user_data:
             raise UserExistsException()
 
@@ -35,10 +35,12 @@ async def login(db, username, password):
 
 async def register(db, username, password, role):
     async with db.acquire() as conn:
-        user_data = await get_user(conn, username=username)
+        user_data = await User.get_user(conn, username=username)
         if user_data:
             raise UserExistsException()
 
         passhash = ph.hash(password)
 
-        await create_user(conn=conn, username=username, passhash=passhash, role=role)
+        await User.create_user(
+            conn=conn, username=username, passhash=passhash, role=role
+        )

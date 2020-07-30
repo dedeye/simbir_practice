@@ -7,7 +7,7 @@ from sqlalchemy import create_engine
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-from user_auth.app.db import metadata
+from user_auth.app.models import metadata
 from user_auth.app.settings import DATABASE_URL
 
 # this is the Alembic Config object, which provides
