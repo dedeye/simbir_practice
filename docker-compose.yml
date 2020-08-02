@@ -1,10 +1,25 @@
-  version: '3'
+version: '3'
     
-  services:
-    web:
-      build: .
-      command: python goods/manage.py runserver 0.0.0.0:8000
-      volumes:
-        - .:/code
-      ports:
-        - "8000:8000"
+services:
+  db:
+    image: postgres:12
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment: 
+      - POSTGRES_USER=goods_user
+      - POSTGRES_PASSWORD=goods_password
+      - POSTGRES_DB=goods_db
+  web:
+    build: goods
+    command: python goods/manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/code
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    env_file:
+      - ./.env.dev
+
+volumes:
+  postgres_data:
