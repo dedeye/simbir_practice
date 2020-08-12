@@ -47,7 +47,7 @@ http://localhost:8000/swagger/
 в поле AUTHORIZATION перед JWT следует указывать `Bearer`
 
 ## Применение миграций
-`docker-compose exec sh -c "cd user_auth && alembic upgrade head"`
+`docker-compose exec user_auth sh -c "cd user_auth && alembic upgrade head"`
 
 ### localhost:8080/api/v1/register/
 регистрирует нового пользователя с ролью user
@@ -75,5 +75,16 @@ http://localhost:8000/swagger/
 http://localhost:8888/docs
 
 ## Применение миграций
-`docker-compose exec sh -c " . /env/bin/activate && alembic upgrade head"`
+`docker-compose exec mailing sh -c " . /env/bin/activate && alembic upgrade head"`
 
+
+# Сервис Monitoring
+
+## Описание
+Сервис хранения записей о событиях
+
+## swagger
+http://localhost:8008/docs
+
+## Применение миграций
+`docker-compose exec monitoring sh -c " . /env/bin/activate && alembic upgrade head"`
