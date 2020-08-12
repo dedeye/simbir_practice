@@ -1,5 +1,6 @@
-from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, EmailStr
+
+from fastapi import APIRouter, HTTPException
 
 from .models import Template
 

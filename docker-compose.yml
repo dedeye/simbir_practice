@@ -52,6 +52,33 @@ services:
       - db
     env_file:
       - ./.env.dev
+  mailing:
+    build: mailing
+    command: bash -c ". /env/bin/activate && uvicorn mailing.asgi:app --reload --debug --host 0.0.0.0"
+    volumes:
+      - ./mailing:/src
+    ports:
+      - "8000:8000"
+    depends_on:
+      - util-db
+      - smtp
+      - rabbit
+    env_file: 
+      - ./mailing/.env.dev
+  smtp:
+    image: bytemark/smtp
+    restart: always
+    env_file: 
+      - ./mailing/.env.dev
+  rabbit:
+    image: "rabbitmq:3-management-alpine"
+    volumes:
+      - ./.docker/rabbitmq/etc/:/etc/rabbitmq/
+      - ./.docker/rabbitmq/data/:/var/lib/rabbitmq/
+      - ./.docker/rabbitmq/logs/:/var/log/rabbitmq/
+    environment:
+      RABBITMQ_DEFAULT_USER: "guest"
+      RABBITMQ_DEFAULT_PASS: "guest"
 
   mailing:
     build: mailing
