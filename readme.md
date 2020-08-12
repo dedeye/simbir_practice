@@ -63,3 +63,17 @@ http://localhost:8000/swagger/
 
 ### localhost:8080/api/v1/logout/
 Выход из системы: инвалидация JWT-Pair
+
+
+
+# Сервис Mailing
+
+## Описание 
+Сервис рассылки писем по шаблонам
+
+## swagger
+http://localhost:8888/docs
+
+## Применение миграций
+`docker-compose exec sh -c " . /env/bin/activate && alembic upgrade head"`
+

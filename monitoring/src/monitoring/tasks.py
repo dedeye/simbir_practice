@@ -7,7 +7,4 @@ from .celery import app
 
 @app.task
 async def store_event(**params):
-    print(params)
-
-    # await db.set_bind(config.DB_DSN)
     await Event.create(**params)
