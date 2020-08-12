@@ -5,8 +5,6 @@ from sqlalchemy.dialects.postgresql import UUID
 
 from . import config
 
-print("db ", config.DB_DSN)
-
 db = Gino(
     dsn=config.DB_DSN,
     pool_min_size=config.DB_POOL_MIN_SIZE,
@@ -28,3 +26,7 @@ class Template(db.Model):
     subject = db.Column(db.String(200), nullable=False)
     text = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, server_default=db.func.now())
+
+    @classmethod
+    async def get_by_name(self, name):
+        return await Template.query.where(Template.name == name).gino.first()

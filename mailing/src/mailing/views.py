@@ -15,7 +15,7 @@ async def get_template(id: str):
 
 @router.get("/template/by_name/{name}")
 async def get_template_by_name(name: str):
-    template = await Template.query.where(Template.name == name).gino.first()
+    template = await Template.get_by_name(name)
     if not template:
         raise HTTPException(status_code=404, detail="Item not found")
     return template.to_dict()
@@ -35,10 +35,10 @@ class MailModel(BaseModel):
 
 @router.post("/template/")
 async def add_template(template: TemplateModel):
-    rv = await Template.create(
+    created = await Template.create(
         name=template.name, text=template.text, subject=template.subject
     )
-    return rv.to_dict()
+    return created.to_dict()
 
 
 @router.delete("/template/{id}")

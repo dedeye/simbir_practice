@@ -57,7 +57,7 @@ services:
     volumes:
       - ./mailing:/src
     ports:
-      - "8000:8000"
+      - "8888:8000"
     depends_on:
       - util-db
       - smtp
@@ -78,6 +78,18 @@ services:
     environment:
       RABBITMQ_DEFAULT_USER: "guest"
       RABBITMQ_DEFAULT_PASS: "guest"
+  monitoring:
+    build: monitoring
+    command: bash startserver.sh
+    volumes:
+      - ./monitoring:/src
+    ports:
+      - "8008:8000"
+    depends_on:
+      - util-db
+      - rabbit
+    env_file: 
+      - ./monitoring/.env.dev
 
 volumes:
   postgres_data:

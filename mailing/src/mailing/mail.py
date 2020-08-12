@@ -17,7 +17,11 @@ async def sendmail(to, template, params):
     message = EmailMessage()
     message["From"] = config.MAIL_ADDRESS
     message["To"] = to
-    message["Subject"] = template.subject.format(**params)
-    message.set_content(template.text.format(**params))
+    try:
+        message["Subject"] = template.subject.format(**params)
+        message.set_content(template.text.format(**params))
+    except Exception:
+        # write error to log here?
+        return
 
     await aiosmtplib.send(message, hostname="smtp", port=25)
