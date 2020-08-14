@@ -11,7 +11,7 @@ Base = declarative_base(metadata=metadata)
 
 class User(Base):
     __tablename__ = "users"
-    id = Column(UUID(as_uuid=True), primary_key=True, index=True)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     username = Column(String(200), unique=True, nullable=False)
     password = Column(String(100), nullable=False)
     role = Column(String(20), nullable=False)
@@ -19,7 +19,7 @@ class User(Base):
     @classmethod
     async def create_user(self, conn, username, passhash, role):
         stmt = self.__table__.insert().values(
-            id=uuid.uuid4(), username=username, password=passhash, role=role,
+            username=username, password=passhash, role=role
         )
         await conn.execute(stmt)
 

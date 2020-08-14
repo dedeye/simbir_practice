@@ -17,7 +17,7 @@ async def user_app():
     setup_routes(app)
     setup_swagger(app)
 
-    # db init/clode
+    # db init/close
     app.on_startup.append(init_pg)
     app.on_cleanup.append(close_pg)
 

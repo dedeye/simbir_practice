@@ -8,7 +8,7 @@ from sqlalchemy import create_engine
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
 from user_auth.app.models import metadata
-from user_auth.app.settings import DATABASE_URL
+from user_auth.app.settings import config as user_config
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -44,7 +44,7 @@ def run_migrations_offline():
     script output.
 
     """
-    url = DATABASE_URL
+    url = user_config.get_db_url()
     context.configure(
         url=url,
         target_metadata=target_metadata,
