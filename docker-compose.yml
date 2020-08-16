@@ -52,9 +52,10 @@ services:
       - db
     env_file:
       - ./.env.dev
+
   mailing:
     build: mailing
-    command: bash -c ". /env/bin/activate && uvicorn mailing.asgi:app --reload --debug --host 0.0.0.0"
+    command: ./wait-for-it.sh rabbit:5672 -- uvicorn mailing.asgi:app --reload --debug --host 0.0.0.0
     volumes:
       - ./mailing:/src
     ports:
