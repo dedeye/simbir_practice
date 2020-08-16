@@ -2,7 +2,6 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, EmailStr
 
 from .models import Template
-from .rabbit import mail_queue
 
 router = APIRouter()
 
@@ -52,11 +51,6 @@ async def delete_template(id: str):
 async def get_all_templates():
     templates = await Template.query.gino.all()
     return [temp.to_dict() for temp in templates]
-
-
-@router.post("/send_mail/")
-async def send_mail(mail: MailModel):
-    await mail_queue.publish(mail.address, mail.temp_name, mail.params)
 
 
 def init_app(app):

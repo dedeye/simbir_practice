@@ -4,6 +4,6 @@ RUN pip install poetry
 RUN mkdir /src
 WORKDIR /src
 COPY . /src/
-RUN ls -l && python -m venv /env && . /env/bin/activate && poetry install
+RUN poetry install
 
 

@@ -1,3 +1,4 @@
+import sqlalchemy as sa
 from gino.ext.starlette import Gino
 
 from . import config
@@ -25,9 +26,6 @@ class Event(db.Model):
 
     @classmethod
     async def get_events(self, skip, limit):
-        async with db.transaction():
-            cursor = await Event.query.gino.iterate()
-            if skip > 0:
-                await cursor.forward(skip)
-            events = await cursor.many(limit)
-        return events
+        async with db.acquire() as conn:
+            query = sa.select([Event]).limit(limit).offset(skip)
+            return await conn.all(query)

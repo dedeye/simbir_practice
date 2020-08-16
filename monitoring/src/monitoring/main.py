@@ -5,6 +5,7 @@ from .views import init_app
 
 
 def get_app():
+
     app = FastAPI(title="monitoring service")
     db.init_app(app)
     init_app(app)

@@ -1,8 +1,6 @@
-from __future__ import absolute_import, unicode_literals
-
 from monitoring.models import Event
 
-from .celery import app
+from .celeryapp import app
 
 
 @app.task

@@ -14,8 +14,8 @@ class MailQueue:
         self.queue_name = queue_name
 
     def run(self):
-        loop = asyncio.get_event_loop()
-        asyncio.create_task(self.reciever(loop))
+        # loop = asyncio.get_event_loop()
+        asyncio.create_task(self.reciever())
 
     # retuns current connection, creates one if needed
     async def get_connection(self):
@@ -30,7 +30,7 @@ class MailQueue:
             data = json.loads(message.body)
             await sendmail(data["to"], data["template"], data["params"])
 
-    async def reciever(self, loop):
+    async def reciever(self):
         connection = await self.get_connection()
 
         channel = await connection.channel()
@@ -39,16 +39,6 @@ class MailQueue:
         async with queue.iterator() as queue_iter:
             async for message in queue_iter:
                 await self.process_message(message)
-
-    async def publish(self, to, template, params):
-        connection = await self.get_connection()
-        channel = await connection.channel()
-
-        message_body = json.dumps({"to": to, "template": template, "params": params})
-
-        await channel.default_exchange.publish(
-            aio_pika.Message(body=message_body.encode()), routing_key=self.queue_name,
-        )
 
 
 mail_queue = MailQueue("mail_queue")

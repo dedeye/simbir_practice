@@ -51,9 +51,10 @@ services:
       - db
     env_file:
       - ./.env.dev
+
   mailing:
     build: mailing
-    command: bash -c ". /env/bin/activate && uvicorn mailing.asgi:app --reload --debug --host 0.0.0.0"
+    command: ./wait-for-it.sh rabbit:5672 -- uvicorn mailing.asgi:app --reload --debug --host 0.0.0.0
     volumes:
       - ./mailing:/src
     ports:
@@ -78,9 +79,19 @@ services:
     environment:
       RABBITMQ_DEFAULT_USER: "guest"
       RABBITMQ_DEFAULT_PASS: "guest"
+  monitoring-celery:
+    build: monitoring
+    command: ./wait-for-it.sh rabbit:5672 -- poetry run celery -A monitoring.celeryapp worker -l info -P celery_pool_asyncio:TaskPool
+    volumes:
+      - ./monitoring:/src
+    depends_on:
+      - util-db
+      - rabbit
+    env_file: 
+      - ./monitoring/.env.dev
   monitoring:
     build: monitoring
-    command: bash startserver.sh
+    command: ./wait-for-it.sh rabbit:5672 -- poetry run uvicorn monitoring.asgi:app --reload --debug --host 0.0.0.0 
     volumes:
       - ./monitoring:/src
     ports:
@@ -88,6 +99,7 @@ services:
     depends_on:
       - util-db
       - rabbit
+      - monitoring-celery
     env_file: 
       - ./monitoring/.env.dev
 

@@ -1,5 +1,3 @@
-import os
-
 DATABASE = {
     "NAME": os.environ.get("SQL_DATABASE"),
     "USER": os.environ.get("SQL_USER"),
