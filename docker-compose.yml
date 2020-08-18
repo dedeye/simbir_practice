@@ -21,15 +21,11 @@ services:
       - POSTGRES_PASSWORD=util_password
       - POSTGRES_DB=util_db
       - POSTGRES_MULTIPLE_DATABASES=mailing, monitoring
-    ports:
-      - "5431:5432"
   web:
     build: goods
     command: python goods/manage.py runserver 0.0.0.0:8000
     volumes:
       - .:/code
-    ports:
-      - "8000:8000"
     depends_on:
       - db
     env_file:
@@ -45,8 +41,6 @@ services:
     command:  adev runserver --root user_auth/app --app-factory user_app -p 8080
     volumes:
       - .:/usercode
-    ports:
-      - "8080:8080"
     depends_on:
       - redis
       - db
@@ -86,8 +80,6 @@ services:
     command: ./wait-for-it.sh rabbit:5672 -- uvicorn mailing.asgi:app --reload --debug --host 0.0.0.0
     volumes:
       - ./mailing:/src
-    ports:
-      - "8888:8000"
     depends_on:
       - util-db
       - smtp
@@ -123,14 +115,22 @@ services:
     command: ./wait-for-it.sh rabbit:5672 -- poetry run uvicorn monitoring.asgi:app --reload --debug --host 0.0.0.0 
     volumes:
       - ./monitoring:/src
-    ports:
-      - "8008:8000"
     depends_on:
       - util-db
       - rabbit
       - monitoring-celery
     env_file: 
       - ./monitoring/.env.dev
+
+  api:
+    build: api
+    command: poetry run adev runserver  api/main.py --app-factory get_app --host 0.0.0.0 -p 8808
+    volumes:
+      - ./api:/src
+    ports:
+      - "8808:8808"
+    
+    
 
 volumes:
   postgres_data:
