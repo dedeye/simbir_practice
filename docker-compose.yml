@@ -9,8 +9,6 @@ services:
       - POSTGRES_USER=goods_user
       - POSTGRES_PASSWORD=goods_password
       - POSTGRES_DB=goods_db
-    ports:
-      - "5432:5432"
   util-db:
     image: postgres:12
     volumes:
@@ -21,7 +19,7 @@ services:
       - POSTGRES_PASSWORD=util_password
       - POSTGRES_DB=util_db
       - POSTGRES_MULTIPLE_DATABASES=mailing, monitoring
-  web:
+  goods:
     build: goods
     command: python goods/manage.py runserver 0.0.0.0:8000
     volumes:
@@ -49,7 +47,7 @@ services:
 
   mailing:
     build: mailing
-    command: ./wait-for-it.sh rabbit:5672 -- uvicorn mailing.asgi:app --reload --debug --host 0.0.0.0
+    command: ./wait-for-it.sh rabbit:5672 -- poetry run uvicorn mailing.asgi:app --reload --debug --host 0.0.0.0
     volumes:
       - ./mailing:/src
     ports:
@@ -86,6 +84,8 @@ services:
       - rabbit
     env_file: 
       - ./mailing/.env.dev
+
+
   smtp:
     image: bytemark/smtp
     restart: always
@@ -122,13 +122,28 @@ services:
     env_file: 
       - ./monitoring/.env.dev
 
+  redis-api:
+      image: redis:6-alpine
+      command: "redis-server"
+      volumes:
+        - redis-api-data:/data
   api:
     build: api
-    command: poetry run adev runserver  api/main.py --app-factory get_app --host 0.0.0.0 -p 8808
+    command: poetry run adev runserver api/main.py --app-factory get_app --host 0.0.0.0 -p 8000
     volumes:
       - ./api:/src
     ports:
-      - "8808:8808"
+      - "8000:8000"
+    depends_on:
+      - mailing
+      - users
+      - redis-api
+      - goods
+      - monitoring
+    env_file:
+      - ./api/.env.dev
+
+
     
     
 
@@ -136,3 +151,4 @@ volumes:
   postgres_data:
   util_data:
   redis-data:
+  redis-api-data:

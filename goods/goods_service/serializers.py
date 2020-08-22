@@ -1,5 +1,8 @@
+import base64
+
 from rest_framework import serializers
 
+from goods.settings import MEDIA_ROOT
 from goods_service.models import Advert, AdvertImage, AdvertTag
 
 
@@ -23,12 +26,19 @@ class AdvertTagSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
+class Base64ImageField(serializers.FileField):
+    def to_representation(self, value):
+        filepath = MEDIA_ROOT + "/" + str(value)
+        with open(filepath, "rb") as image_file:
+            return image_file.read()
+
+
 class AdvertImageSerializer(serializers.ModelSerializer):
-    file = serializers.FileField()
+    file = Base64ImageField()
 
     class Meta:
         model = AdvertImage
-        fields = ["file", "id"]
+        fields = ["file", "id", "author"]
         read_only_fields = ["id"]
 
 

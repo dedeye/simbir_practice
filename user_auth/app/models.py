@@ -29,3 +29,10 @@ class User(Base):
         stmt = table.select().where(table.c.username == username)
         result = await conn.execute(stmt)
         return await result.fetchone()
+
+    @classmethod
+    async def get_user_by_id(self, conn, uuid):
+        table = self.__table__
+        stmt = table.select().where(table.c.id == uuid)
+        result = await conn.execute(stmt)
+        return await result.fetchone()

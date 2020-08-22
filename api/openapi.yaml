@@ -1,0 +1,454 @@
+openapi: 3.0.1
+info:
+  title: Swagger API
+  description: Swagger API definition
+  version: 1.0.0
+servers:
+  - url: /
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT 
+      
+
+paths:
+  /auth/login/:
+    post:
+      description: This end-point allow to log in
+      tags:
+        - Auth
+      responses:
+        '200':
+          description: ok
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                login:
+                  type: string
+                  description: User's username
+                  default: John
+                password:
+                  type: string
+                  description: User's password
+                  default: password
+        required: true
+
+
+  /auth/test/:
+    get:
+      security:
+        - bearerAuth: []
+      tags:
+        - Auth
+      responses:
+        '200':
+          description: ok
+
+
+  /auth/request_register_token/:
+    post:
+      tags:
+        - Auth
+      responses:
+        '200':
+          description: ok
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  description: email
+                  default: John@mail.components
+        required: true
+
+
+  /auth/register/:
+    post:
+      description: This end-point allow to register
+      tags:
+        - Auth
+      responses:
+        '200':
+          description: ok
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                login:
+                  type: string
+                  description: User's username
+                  default: John
+                password:
+                  type: string
+                  description: User's password
+                  default: password
+                token:
+                  type: string
+                  description: token send on email
+                  default: None
+
+        required: true
+
+
+  /auth/refresh/:
+    post:
+      description: Refresh JWT token
+      tags:
+        - Auth
+      responses:
+        '200':
+          description: ok
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                jwt:
+                  type: string
+                  description: JWT
+                refresh:
+                  type: string
+                  description: Refresh token
+
+        required: true
+
+  /auth/logout/:
+    post:
+      security:
+        - bearerAuth: []
+      description: Log Out 
+      tags:
+        - Auth
+      responses:
+        '200':
+          description: ok
+
+
+
+  /goods/adv/:
+    get:
+      description: List of advs in brief mode 
+      tags:
+        - Goods
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          description: A page number within the paginated result set.
+          schema:
+            type: integer
+        - name: before
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: after
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: max_price
+          in: query
+          schema:
+            type: integer
+        - name: min_price
+          in: query
+          schema:
+            type: integer
+        - name: tag
+          in: query
+          style: form
+          explode: true
+          schema:
+            type: array
+            items:
+              type: string
+        - name: order
+          in: query
+          schema:
+            type: string
+            enum:
+            - cheap
+            - expensive
+            - old
+            - new
+        - name: author
+          in: query
+          schema:
+            type: string
+
+      responses:
+        '200':
+          description: ok
+    post:
+      security:
+        - bearerAuth: []
+      description: Add new adv
+      tags:
+        - Goods
+      requestBody:
+        content:
+          application/json:
+            schema:
+              required:
+                - contacts
+                - tags
+                - title
+              type: object
+              properties:
+                tags:
+                  type: array
+                  items:
+                    type: string
+                title:
+                  title: Title
+                  maxLength: 200
+                  minLength: 1
+                  type: string
+                description:
+                  title: Description
+                  maxLength: 500
+                  type: string
+                contacts:
+                  title: Contacts
+                  maxLength: 300
+                  minLength: 1
+                  type: string
+                price:
+                  title: Price
+                  maximum: 2147483647
+                  minimum: 0
+                  type: integer
+                  nullable: true
+        required: true
+
+      responses:
+        '200':
+          description: ok
+
+
+  /goods/adv/all_tags/:
+    get:
+      description: List of all used tags 
+      tags:
+        - Goods
+      parameters:
+        - name: page
+          in: query
+          description: A page number within the paginated result set.
+          required: false
+          type: integer
+      responses:
+        '200':
+          description: ok
+
+  /goods/adv/{id}/:
+    get:
+      tags:
+      - Goods
+      operationId: advert_read
+      parameters:
+      - name: id
+        in: path
+        description: get full ad description
+        required: true
+        schema:
+          type: integer
+      responses:
+        200:
+          description: ""
+
+    delete:
+      tags:
+      - Goods
+      operationId: advert_read
+      security:
+        - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        description: get full ad description
+        required: true
+        schema:
+          type: integer
+      responses:
+        200:
+          description: ""
+      
+
+    patch:
+      tags:
+      - Goods
+      operationId: advert_read
+      security:
+        - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        description: get full ad description
+        required: true
+        schema:
+          type: integer
+      responses:
+        200:
+          description: ""
+      requestBody:
+        content:
+          application/json:
+            schema:
+              required:
+                - contacts
+                - tags
+                - title
+              type: object
+              properties:
+                tags:
+                  type: array
+                  items:
+                    type: string
+                title:
+                  title: Title
+                  maxLength: 200
+                  minLength: 1
+                  type: string
+                description:
+                  title: Description
+                  maxLength: 500
+                  type: string
+                contacts:
+                  title: Contacts
+                  maxLength: 300
+                  minLength: 1
+                  type: string
+                price:
+                  title: Price
+                  maximum: 2147483647
+                  minimum: 0
+                  type: integer
+                  nullable: true
+        required: true
+      
+    put:
+      tags:
+      - Goods
+      operationId: advert_read
+      security:
+        - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        description: get full ad description
+        required: true
+        schema:
+          type: integer
+      responses:
+        200:
+          description: ""
+      requestBody:
+        content:
+          application/json:
+            schema:
+              required:
+                - contacts
+                - tags
+                - title
+              type: object
+              properties:
+                tags:
+                  type: array
+                  items:
+                    type: string
+                title:
+                  title: Title
+                  maxLength: 200
+                  minLength: 1
+                  type: string
+                description:
+                  title: Description
+                  maxLength: 500
+                  type: string
+                contacts:
+                  title: Contacts
+                  maxLength: 300
+                  minLength: 1
+                  type: string
+                price:
+                  title: Price
+                  maximum: 2147483647
+                  minimum: 0
+                  type: integer
+                  nullable: true
+        required: true
+  
+
+  /goods/adv/{id}/img/:
+    post:
+      tags:
+      - Goods
+      security:
+        - bearerAuth: []
+      operationId: advert_img_create
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+
+      responses:
+        201:
+          description: ""
+          
+  /goods/img/{id}/:
+    get:
+      tags:
+        - Goods
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+        
+      responses:
+        200:
+          description: ""
+
+    delete:
+      tags:
+        - Goods
+      security:
+        - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+        
+      responses:
+        200:
+          description: ""
