@@ -1,16 +1,16 @@
 import aiopg
 import aiopg.sa
 
-import user_auth.app.settings as settings
+from user_auth.app.settings import config
 
 
 async def init_pg(app):
     engine = await aiopg.sa.create_engine(
-        database=settings.DATABASE["NAME"],
-        user=settings.DATABASE["USER"],
-        password=settings.DATABASE["PASSWORD"],
-        host=settings.DATABASE["HOST"],
-        port=settings.DATABASE["PORT"],
+        database=config.db_name,
+        user=config.db_user,
+        password=config.db_pass,
+        host=config.db_host,
+        port=config.db_port,
     )
     app["db"] = engine
 

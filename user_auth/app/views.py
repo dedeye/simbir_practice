@@ -44,22 +44,19 @@ async def register(request):
     try:
         data = await request.json()
     except Exception:
-        return web.json_response(data={"error": "invalid json data"}, status=400)
+        raise web.HTTPBadRequest(reason="invalid json")
 
     if "username" not in data:
-        return web.json_response(data={"error": "username required"}, status=400)
+        raise web.HTTPBadRequest(reason="username required")
     if "password" not in data:
-        return web.json_response(data={"error": "password required"}, status=400)
+        raise web.HTTPBadRequest(reason="password required")
 
-    try:
-        await users.register(
-            db=request.app["db"],
-            username=data["username"],
-            password=data["password"],
-            role="user",
-        )
-    except users.UserExistsException:
-        raise web.HTTPBadRequest(reason="Username taken")
+    await users.register(
+        db=request.app["db"],
+        username=data["username"],
+        password=data["password"],
+        role="user",
+    )
 
     return web.json_response(data={"result": "success"}, status=200)
 
@@ -105,19 +102,16 @@ async def login(request):
     try:
         data = await request.json()
     except Exception:
-        return web.json_response(data={"error": "invalid json data"}, status=400)
+        raise web.HTTPBadRequest(reason="invalid json")
 
     if "username" not in data:
-        return web.json_response(data={"error": "username required"}, status=400)
+        raise web.HTTPBadRequest(reason="username required")
     if "password" not in data:
-        return web.json_response(data={"error": "password required"}, status=400)
+        raise web.HTTPBadRequest(reason="password required")
 
-    try:
-        user_data = await users.login(
-            db=request.app["db"], username=data["username"], password=data["password"]
-        )
-    except (users.UserExistsException, users.WrongPasswordException):
-        return web.HTTPBadRequest(reason="wrong login or password")
+    user_data = await users.login(
+        db=request.app["db"], username=data["username"], password=data["password"]
+    )
 
     pair = await jwt_pair.create(
         request=request, user=data["username"], role=user_data.role
@@ -188,7 +182,7 @@ async def refresh(request):
     try:
         data = await request.json()
     except Exception:
-        return web.Response(text="nok", status=400)
+        raise web.HTTPBadRequest(reason="invalid json")
 
     if "refresh_token" not in data:
         data = {"error": "refresh token required"}
@@ -198,14 +192,11 @@ async def refresh(request):
         data = {"error": "jwt token required"}
         return web.json_response(data=data, status=400)
 
-    try:
-        result = await jwt_pair.refresh(
-            request=request,
-            jwt_token=data["jwt_token"],
-            refresh_token=data["refresh_token"],
-        )
-    except jwt_pair.JwtPairNotFound:
-        web.HTTPBadRequest(reason="JWT Pair not found, refresh token may be expired")
+    result = await jwt_pair.refresh(
+        request=request,
+        jwt_token=data["jwt_token"],
+        refresh_token=data["refresh_token"],
+    )
 
     return web.json_response(data=result, status=200)
 

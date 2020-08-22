@@ -11,3 +11,4 @@ aiopg==1.0.0
 argon2-cffi==20.1.0
 PyJWT==1.7.1
 aiohttp-jwt==0.6.1
+pydantic==1.6.1

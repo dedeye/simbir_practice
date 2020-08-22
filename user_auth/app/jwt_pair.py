@@ -6,16 +6,13 @@ import aioredis
 import jwt
 from aiohttp_jwt import JWTMiddleware
 
-import user_auth.app.settings as settings
+from user_auth.app.exceptions import JwtPairNotFound
+from user_auth.app.settings import config
 
-JWT_SECRET = settings.JWT["SECRET"]
-JWT_ALGORITHM = settings.JWT["ALGORITHM"]
-JWT_TTL = settings.JWT["TTL"]
-RFR_TTL = settings.JWT["REFRESH_TOKEN_TTL"]
-
-
-class JwtPairNotFound(Exception):
-    pass
+JWT_SECRET = config.jwt_secret
+JWT_ALGORITHM = config.jwt_algo
+JWT_TTL = config.jwt_ttl
+RFR_TTL = config.jwt_refresh_ttl
 
 
 async def init_storage(app):
@@ -76,7 +73,9 @@ async def refresh(request, jwt_token, refresh_token):
 
     await revoke(request, jwt_token)
 
-    data = jwt.decode(jwt_token, JWT_SECRET, verify=False, algorithms=[JWT_ALGORITHM])
+    data = jwt.decode(
+        jwt_token, JWT_SECRET, algorithms=[JWT_ALGORITHM], options={"verify_exp": False}
+    )
 
     return await create(request, data["user"], data["role"])
 
