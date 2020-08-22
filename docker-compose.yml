@@ -11,6 +11,18 @@ services:
       - POSTGRES_DB=goods_db
     ports:
       - "5432:5432"
+  util-db:
+    image: postgres:12
+    volumes:
+      - ./pg_init:/docker-entrypoint-initdb.d
+      - util_data:/var/lib/postgresql/data/
+    environment: 
+      - POSTGRES_USER=util_user
+      - POSTGRES_PASSWORD=util_password
+      - POSTGRES_DB=util_db
+      - POSTGRES_MULTIPLE_DATABASES=mailing, monitoring
+    ports:
+      - "5431:5432"
   web:
     build: goods
     command: python goods/manage.py runserver 0.0.0.0:8000
@@ -41,6 +53,58 @@ services:
     env_file:
       - ./.env.dev
 
+  mailing:
+    build: mailing
+    command: ./wait-for-it.sh rabbit:5672 -- uvicorn mailing.asgi:app --reload --debug --host 0.0.0.0
+    volumes:
+      - ./mailing:/src
+    ports:
+      - "8888:8000"
+    depends_on:
+      - util-db
+      - smtp
+      - rabbit
+    env_file: 
+      - ./mailing/.env.dev
+  smtp:
+    image: bytemark/smtp
+    restart: always
+    env_file: 
+      - ./mailing/.env.dev
+  rabbit:
+    image: "rabbitmq:3-management-alpine"
+    volumes:
+      - ./.docker/rabbitmq/etc/:/etc/rabbitmq/
+      - ./.docker/rabbitmq/data/:/var/lib/rabbitmq/
+      - ./.docker/rabbitmq/logs/:/var/log/rabbitmq/
+    environment:
+      RABBITMQ_DEFAULT_USER: "guest"
+      RABBITMQ_DEFAULT_PASS: "guest"
+  monitoring-celery:
+    build: monitoring
+    command: ./wait-for-it.sh rabbit:5672 -- poetry run celery -A monitoring.celeryapp worker -l info -P celery_pool_asyncio:TaskPool
+    volumes:
+      - ./monitoring:/src
+    depends_on:
+      - util-db
+      - rabbit
+    env_file: 
+      - ./monitoring/.env.dev
+  monitoring:
+    build: monitoring
+    command: ./wait-for-it.sh rabbit:5672 -- poetry run uvicorn monitoring.asgi:app --reload --debug --host 0.0.0.0 
+    volumes:
+      - ./monitoring:/src
+    ports:
+      - "8008:8000"
+    depends_on:
+      - util-db
+      - rabbit
+      - monitoring-celery
+    env_file: 
+      - ./monitoring/.env.dev
+
 volumes:
   postgres_data:
+  util_data:
   redis-data:
