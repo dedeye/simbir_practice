@@ -31,10 +31,6 @@ class MailToken:
 
     async def token_is_valid(self, email, token):
         stored_token = await self.redis.get(email, encoding="utf-8")
-        print(stored_token)
-        print(token)
-        if stored_token != token:
-            print("neq")
 
         return stored_token == token
 

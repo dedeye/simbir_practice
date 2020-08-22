@@ -180,7 +180,7 @@ class AdvertImageUpload(generics.CreateAPIView):
     serializer_class = AdvertImageSerializer
 
     def post(self, request, id, format=None):
-        print(request.data)
+
         if "file" not in request.data:
             raise ValidationError("Empty content")
 

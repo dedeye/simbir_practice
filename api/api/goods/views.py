@@ -78,10 +78,11 @@ async def get_by_id(request, **kwargs):
 
     # next code seems pretty bad =(
     # check if we need to send mail views notification
-    views = json.loads(result["body"])["views"]
+    data = json.loads(result["body"])
+    views = data["views"]
 
     if (views % 10) == 0:
-        id = json.loads(result["body"])["author"]
+        id = data["author"]
         email = await auth_client.login_by_id(id)
         # send mail
         mailing = request.app["mailing"]
