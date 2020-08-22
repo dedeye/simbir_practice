@@ -144,3 +144,4 @@ cython_debug/
 goods/media/
 
 .DS_Store
+.docker/

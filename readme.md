@@ -9,7 +9,7 @@ http://localhost:8000/swagger/
 ## api
 
 ### localhost:8000/api/v1/advert GET
-возврщает список объявлений в кратком предствалении
+возвращает список объявлений в кратком предствалении
 
 ### localhost:8000/api/v1/advert GET
 добавление нового объявления
@@ -35,3 +35,31 @@ http://localhost:8000/swagger/
 ### localhost:8000/api/v1/img/{id} GET DELETE
 получение/удаление изображения по id
 
+
+
+# Сервис User_auth
+
+## Описание 
+Сервис авторизации на основе JWT
+
+## swagger 
+http://localhost:8000/swagger/
+в поле AUTHORIZATION перед JWT следует указывать `Bearer`
+
+## Применение миграций
+`docker-compose exec sh -c "cd user_auth && alembic upgrade head"`
+
+### localhost:8080/api/v1/register/
+регистрирует нового пользователя с ролью user
+
+### localhost:8080/api/v1/login/
+Вход в систему: генерирует JWT-Pair для пользователя
+
+### localhost:8080/api/v1/validate/
+Проверяет корректность JWT, возвращает payload
+
+### localhost:8080/api/v1/refresh/
+Обновление JWT-Pair с помощью refresh token
+
+### localhost:8080/api/v1/logout/
+Выход из системы: инвалидация JWT-Pair

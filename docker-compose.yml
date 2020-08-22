@@ -9,6 +9,8 @@ services:
       - POSTGRES_USER=goods_user
       - POSTGRES_PASSWORD=goods_password
       - POSTGRES_DB=goods_db
+    ports:
+      - "5432:5432"
   web:
     build: goods
     command: python goods/manage.py runserver 0.0.0.0:8000
@@ -20,6 +22,25 @@ services:
       - db
     env_file:
       - ./.env.dev
+  redis:
+    image: redis:6-alpine
+    command: "redis-server /usr/local/etc/redis/redis.conf"
+    volumes:
+      - ./user_auth/redis.conf:/usr/local/etc/redis/redis.conf
+      - redis-data:/data
+  users:
+    build: user_auth
+    command:  adev runserver --root user_auth/app --app-factory user_app -p 8080
+    volumes:
+      - .:/usercode
+    ports:
+      - "8080:8080"
+    depends_on:
+      - redis
+      - db
+    env_file:
+      - ./.env.dev
 
 volumes:
   postgres_data:
+  redis-data:
