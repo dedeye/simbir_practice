@@ -1,10 +1,10 @@
 from aiohttp import web
 from aiohttp_swagger import setup_swagger
 
-from .auth.mail_token import init_mail_token
-from .mailing import mailing_init
-from .monitoring import monitoring_middleware
-from .routes import setup_routes
+from api.auth.mail_token import init_mail_token
+from api.mailing import mailing_init
+from api.monitoring import monitoring_middleware
+from api.routes import setup_routes
 
 
 async def index(request):

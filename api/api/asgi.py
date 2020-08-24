@@ -1,3 +1,3 @@
-from .main import get_app
+from api.main import get_app
 
 app = get_app()

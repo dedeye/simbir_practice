@@ -1,6 +1,6 @@
 from functools import wraps
 
-from .client import validate
+from api.auth.client import validate
 
 
 def use_auth(required=False):

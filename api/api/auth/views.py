@@ -70,17 +70,17 @@ async def request_register_token(request):
 
     # check login free
     login_taken = await client.login_taken(data.email)
-    if login_taken:
-        raise Exception
 
-    # generate token
-    mail_token = request.app["mail_token"]
-    token = mail_token.create_token()
-    await mail_token.store_token(data.email, token)
+    # send token only if login is free
+    if not login_taken:
+        # generate token
+        mail_token = request.app["mail_token"]
+        token = mail_token.create_token()
+        await mail_token.store_token(data.email, token)
 
-    # send mail
-    mailing = request.app["mailing"]
-    await mailing.send(data.email, "mail_token", {"token": token})
+        # send mail
+        mailing = request.app["mailing"]
+        await mailing.send(data.email, "mail_token", {"token": token})
 
     return web.Response(text="ok ", status=200)
 

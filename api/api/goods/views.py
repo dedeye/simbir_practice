@@ -1,3 +1,4 @@
+import enum
 import json
 
 from aiohttp import web
@@ -7,6 +8,13 @@ from api.auth.decorator import use_auth
 from api.goods import client
 
 routes = web.RouteTableDef()
+
+
+class Method(enum.Enum):
+    GET = "GET"
+    POST = "POST"
+    PUT = "PUT"
+    DELETE = "DELETE"
 
 
 @routes.get("/goods/adv/all_tags/")
@@ -53,7 +61,7 @@ async def post_adv(request, **kwargs):
 async def adv_crud_by_id(request, method, kwargs):
     id = request.match_info["id"]
 
-    if method != "GET":
+    if method != Method.GET:
         user = kwargs["user"]
         author = await client.adv_get_ad_author(id)
         if user != author:
@@ -66,15 +74,15 @@ async def adv_crud_by_id(request, method, kwargs):
         except Exception:
             raise web.HTTPBadRequest(reason="invalid json")
 
-    if method == "PUT":
+    if method == Method.PUT:
         data["author"] = kwargs["user"]
 
-    return await client.adv_by_id(method, id, data=data)
+    return await client.adv_by_id(method.value, id, data=data)
 
 
 @routes.get("/goods/adv/{id}/")
 async def get_by_id(request, **kwargs):
-    result = await adv_crud_by_id(request, "GET", kwargs)
+    result = await adv_crud_by_id(request, Method.GET, kwargs)
 
     # next code seems pretty bad =(
     # check if we need to send mail views notification
@@ -96,7 +104,7 @@ async def get_by_id(request, **kwargs):
 @routes.delete("/goods/adv/{id}/")
 @use_auth(required=True)
 async def del_by_id(request, **kwargs):
-    result = await adv_crud_by_id(request, "DELETE", kwargs)
+    result = await adv_crud_by_id(request, Method.DELETE, kwargs)
     return web.Response(
         status=result["status"], body=result["body"], headers=result["hdrs"]
     )
@@ -105,7 +113,7 @@ async def del_by_id(request, **kwargs):
 @routes.put("/goods/adv/{id}/")
 @use_auth(required=True)
 async def put_by_id(request, **kwargs):
-    result = await adv_crud_by_id(request, "PUT", kwargs)
+    result = await adv_crud_by_id(request, Method.PUT, kwargs)
     return web.Response(
         status=result["status"], body=result["body"], headers=result["hdrs"]
     )
@@ -114,7 +122,7 @@ async def put_by_id(request, **kwargs):
 @routes.patch("/goods/adv/{id}/")
 @use_auth(required=True)
 async def patch_by_id(request, **kwargs):
-    result = await adv_crud_by_id(request, "PATCH", kwargs)
+    result = await adv_crud_by_id(request, Method.PATCH, kwargs)
     return web.Response(
         status=result["status"], body=result["body"], headers=result["hdrs"]
     )

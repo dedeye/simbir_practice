@@ -18,7 +18,6 @@ async def adv_list(params):
 
 async def adv_filtered(params):
     url = URL_BASE + "advert/filter/"
-    print(url)
     async with aiohttp.ClientSession() as session:
         async with session.get(url, params=params) as resp:
             return {
@@ -78,7 +77,6 @@ async def adv_add_image(id, img, author):
     data.add_field(name="author", value=author)
 
     data.add_field(name="file", value=img.file, filename=img.filename)
-    print(data)
 
     async with aiohttp.ClientSession() as session:
         async with session.post(url, data=data) as resp:

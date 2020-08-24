@@ -41,7 +41,7 @@ async def register(db, username, password, role):
 async def login_taken(db, username):
     async with db.acquire() as conn:
         user = await User.get_user(conn, username=username)
-        return not not user
+        return user is not None
 
 
 async def get_username_by_id(db, uuid):
