@@ -1,4 +1,10 @@
+import base64
+import io
+
+from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.shortcuts import get_object_or_404
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework import generics, mixins, pagination, status
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
@@ -7,8 +13,6 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, ModelViewSet
 
 import dateutil.parser
-from drf_yasg import openapi
-from drf_yasg.utils import swagger_auto_schema
 from goods_service.models import Advert as AdvertModel
 from goods_service.models import AdvertImage as AdvertImageModel
 from goods_service.models import AdvertTag as AdvertTagModel
@@ -97,6 +101,9 @@ class AdvertView(ModelViewSet):
                 type=openapi.TYPE_STRING,
                 enum=["cheap", "expensive", "old", "new"],
             ),
+            openapi.Parameter(
+                "author", in_=openapi.IN_QUERY, type=openapi.TYPE_STRING,
+            ),
         ]
     )
     @action(detail=False)
@@ -110,12 +117,13 @@ class AdvertView(ModelViewSet):
             "new": "-created",
         }
         # parse all possible filter params
-        before = self.request.query_params.get("before", "3000-01-01T00:00:00")
-        after = self.request.query_params.get("after", "0001-01-01T00:00:00")
+        before = self.request.query_params.get("before", "3000-01-01T00:00:00Z")
+        after = self.request.query_params.get("after", "0001-01-01T00:00:00Z")
         max_price = self.request.query_params.get("max_price", None)
         min_price = self.request.query_params.get("min_price", None)
         tags = self.request.query_params.getlist("tag", [])
         order = self.request.query_params.get("order", None)
+        author = self.request.query_params.get("author", None)
 
         # validate order
         if order is not None and order not in order_types.keys():
@@ -130,8 +138,7 @@ class AdvertView(ModelViewSet):
 
         # filter by tags
         if tags:
-            print(tags)
-            queryset = queryset.filter(tags__name__in=tags)
+            queryset = queryset.filter(tags__name__in=tags).distinct()
 
         # filter by price
         if max_price is not None:
@@ -141,6 +148,10 @@ class AdvertView(ModelViewSet):
 
         # filter by datetime
         queryset = queryset.filter(created__range=[str(after), str(before)])
+
+        # filter by author
+        if author:
+            queryset = queryset.filter(author=author)
 
         # order
         if order is not None:
@@ -169,12 +180,30 @@ class AdvertImageUpload(generics.CreateAPIView):
     serializer_class = AdvertImageSerializer
 
     def post(self, request, id, format=None):
+
         if "file" not in request.data:
             raise ValidationError("Empty content")
 
+        if "author" not in request.data:
+            raise ValidationError("Empty content")
+
         f = request.data["file"]
+
+        encoded_string = base64.b64encode(f.file.getvalue())
+
+        f_new = InMemoryUploadedFile(
+            file=io.BytesIO(encoded_string),
+            field_name=f.name,
+            name=f.name + ".base64",
+            size=len(encoded_string),
+            content_type=None,
+            charset=None,
+        )
+        f.file.close()
+
+        author = request.data["author"]
         adv = get_object_or_404(AdvertModel.objects.all(), pk=id)
 
-        AdvertImageModel.objects.create(advert=adv, file=f)
+        AdvertImageModel.objects.create(advert=adv, file=f_new, author=author)
 
         return Response(status=status.HTTP_201_CREATED)

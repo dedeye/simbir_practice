@@ -114,7 +114,7 @@ async def login(request):
     )
 
     pair = await jwt_pair.create(
-        request=request, user=data["username"], role=user_data.role
+        request=request, user=str(user_data.id), role=user_data.role
     )
 
     return web.json_response(data=pair, status=200)
@@ -226,3 +226,44 @@ async def logout(request):
 
     await jwt_pair.revoke(request)
     return web.json_response(data={"result": "success"}, status=200)
+
+
+async def login_taken(request):
+    """
+    ---
+    description: This end-point return True if login is in use
+    tags:
+      - Auth
+    produces:
+      - application/json
+    consumes:
+      - "application/json"
+    parameters:
+      - name: "username"
+        in: "path"
+        required: true
+        type: "string"
+    """
+    taken = await users.login_taken(request.app["db"], request.match_info["username"])
+    return web.json_response(data={"taken": taken}, status=200)
+
+
+async def get_login(request):
+    """
+    ---
+    description: This end-point return login for user id
+    tags:
+      - Auth
+    produces:
+      - application/json
+    consumes:
+      - "application/json"
+    parameters:
+      - name: "id"
+        in: "path"
+        required: true
+        type: "int"
+    """
+    uuid = request.match_info["id"]
+    user = await users.get_username_by_id(request.app["db"], uuid)
+    return web.json_response(data={"login": user.username}, status=200)

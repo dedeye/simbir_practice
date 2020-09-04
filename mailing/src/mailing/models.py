@@ -1,6 +1,7 @@
 import uuid
 
 from gino.ext.starlette import Gino
+
 from sqlalchemy.dialects.postgresql import UUID
 
 from . import config

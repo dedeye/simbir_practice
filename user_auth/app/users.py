@@ -36,3 +36,14 @@ async def register(db, username, password, role):
         await User.create_user(
             conn=conn, username=username, passhash=passhash, role=role
         )
+
+
+async def login_taken(db, username):
+    async with db.acquire() as conn:
+        user = await User.get_user(conn, username=username)
+        return user is not None
+
+
+async def get_username_by_id(db, uuid):
+    async with db.acquire() as conn:
+        return await User.get_user_by_id(conn, uuid=uuid)

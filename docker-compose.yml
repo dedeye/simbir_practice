@@ -9,8 +9,6 @@ services:
       - POSTGRES_USER=goods_user
       - POSTGRES_PASSWORD=goods_password
       - POSTGRES_DB=goods_db
-    ports:
-      - "5432:5432"
   util-db:
     image: postgres:12
     volumes:
@@ -21,15 +19,11 @@ services:
       - POSTGRES_PASSWORD=util_password
       - POSTGRES_DB=util_db
       - POSTGRES_MULTIPLE_DATABASES=mailing, monitoring
-    ports:
-      - "5431:5432"
-  web:
+  goods:
     build: goods
     command: python goods/manage.py runserver 0.0.0.0:8000
     volumes:
       - .:/code
-    ports:
-      - "8000:8000"
     depends_on:
       - db
     env_file:
@@ -45,8 +39,6 @@ services:
     command:  adev runserver --root user_auth/app --app-factory user_app -p 8080
     volumes:
       - .:/usercode
-    ports:
-      - "8080:8080"
     depends_on:
       - redis
       - db
@@ -55,11 +47,11 @@ services:
 
   mailing:
     build: mailing
-    command: ./wait-for-it.sh rabbit:5672 -- uvicorn mailing.asgi:app --reload --debug --host 0.0.0.0
+    command: ./wait-for-it.sh rabbit:5672 -- poetry run uvicorn mailing.asgi:app --reload --debug --host 0.0.0.0
     volumes:
       - ./mailing:/src
     ports:
-      - "8888:8000"
+      - "8080:8000"
     depends_on:
       - util-db
       - smtp
@@ -80,6 +72,7 @@ services:
     environment:
       RABBITMQ_DEFAULT_USER: "guest"
       RABBITMQ_DEFAULT_PASS: "guest"
+
   monitoring-celery:
     build: monitoring
     command: ./wait-for-it.sh rabbit:5672 -- poetry run celery -A monitoring.celeryapp worker -l info -P celery_pool_asyncio:TaskPool
@@ -95,8 +88,6 @@ services:
     command: ./wait-for-it.sh rabbit:5672 -- poetry run uvicorn monitoring.asgi:app --reload --debug --host 0.0.0.0 
     volumes:
       - ./monitoring:/src
-    ports:
-      - "8008:8000"
     depends_on:
       - util-db
       - rabbit
@@ -104,7 +95,33 @@ services:
     env_file: 
       - ./monitoring/.env.dev
 
+  redis-api:
+      image: redis:6-alpine
+      command: "redis-server"
+      volumes:
+        - redis-api-data:/data
+  api:
+    build: api
+    command: poetry run adev runserver api/main.py --app-factory get_app --host 0.0.0.0 -p 8000
+    volumes:
+      - ./api:/src
+    ports:
+      - "8000:8000"
+    depends_on:
+      - mailing
+      - users
+      - redis-api
+      - goods
+      - monitoring
+    env_file:
+      - ./api/.env.dev
+
+
+    
+    
+
 volumes:
   postgres_data:
   util_data:
   redis-data:
+  redis-api-data:

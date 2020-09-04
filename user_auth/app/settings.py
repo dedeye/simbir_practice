@@ -1,5 +1,3 @@
-import os
-
 from pydantic import BaseSettings
 from pydantic.fields import Field
 

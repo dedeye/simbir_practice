@@ -22,6 +22,7 @@ class Advert(models.Model):
     price = models.PositiveIntegerField(blank=True, null=True)
     views = models.PositiveIntegerField(default=0)
     tags = SortedManyToManyField(AdvertTag)
+    author = models.CharField(max_length=100, blank=False)
 
     def __str__(self):
         return self.title
@@ -36,6 +37,7 @@ class Advert(models.Model):
 
 class AdvertImage(SafeDeleteModel):
     file = models.FileField(upload_to="img")
+    author = models.CharField(max_length=100, blank=False)
     advert = models.ForeignKey(
         Advert, related_name="image", on_delete=models.SET_NULL, null=True
     )

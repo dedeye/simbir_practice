@@ -13,5 +13,5 @@ router.register(r"img", views.AdvertImageView)
 # The API URLs are now determined automatically by the router.
 urlpatterns = [
     path("", include(router.urls)),
-    path("advert/<int:id>/img", views.AdvertImageUpload.as_view()),
+    path("advert/<int:id>/img/", views.AdvertImageUpload.as_view()),
 ]

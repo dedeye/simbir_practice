@@ -17,6 +17,7 @@ async def sendmail(to, template, params):
     message = EmailMessage()
     message["From"] = config.MAIL_ADDRESS
     message["To"] = to
+
     try:
         message["Subject"] = template.subject.format(**params)
         message.set_content(template.text.format(**params))
